@@ -6,14 +6,14 @@ async def download_video(update, url):
     await update.message.reply_text("⏳ Video yuklanmoqda...")
 
     ydl_opts = {
-        "format": "best",
+        "format": "bestvideo+bestaudio/best",
         "outtmpl": "video.%(ext)s",
+        "merge_output_format": "mp4",
         "quiet": True,
-        "no_warnings": True
+        "noplaylist": True
     }
 
     try:
-
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
@@ -23,4 +23,4 @@ async def download_video(update, url):
                 os.remove(file)
 
     except:
-        await update.message.reply_text("❌ Yuklab bo'lmadi")
+        await update.message.reply_text("❌ Video yuklab bo'lmadi")
