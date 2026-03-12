@@ -3,8 +3,8 @@ import yt_dlp
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = os.getenv"8747120025:AAHOcCCT5F9uwHYCEkLKF5UpxMc5-seD2Zk"
-ADMIN_ID = 123456789  # o'zingizni telegram ID yozing
+TOKEN = "8747120025:AAHOcCCT5F9uwHYCEkLKF5UpxMc5-seD2Zk"
+ADMIN_ID = 123456789
 
 menu = ReplyKeyboardMarkup(
     [
@@ -14,7 +14,6 @@ menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-# START
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.message.from_user.id
@@ -34,7 +33,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# ADMIN USERS
 async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if update.message.from_user.id == ADMIN_ID:
@@ -42,10 +40,9 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open("users.txt") as f:
             count = len(f.readlines())
 
-        await update.message.reply_text(f"👥 Foydalanuvchilar soni: {count}")
+        await update.message.reply_text(f"👥 Foydalanuvchilar: {count}")
 
 
-# VIDEO DOWNLOAD
 async def download_video(update, url):
 
     await update.message.reply_text("⏳ Video yuklanmoqda...")
@@ -69,7 +66,6 @@ async def download_video(update, url):
         await update.message.reply_text("❌ Video yuklab bo'lmadi")
 
 
-# SONG SEARCH
 async def search_song(update, query):
 
     await update.message.reply_text("🎵 Qo'shiq qidirilmoqda...")
@@ -93,13 +89,12 @@ async def search_song(update, query):
         await update.message.reply_text("❌ Qo'shiq topilmadi")
 
 
-# MESSAGE HANDLER
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
 
     if text == "📥 Video yuklash":
-        await update.message.reply_text("📎 TikTok / Instagram / YouTube link yuboring")
+        await update.message.reply_text("📎 Video link yuboring")
 
     elif text == "🎵 Qo'shiq qidirish":
         await update.message.reply_text("🔎 Qo'shiq nomini yozing")
@@ -111,7 +106,6 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await search_song(update, text)
 
 
-# APP
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
