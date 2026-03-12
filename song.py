@@ -1,23 +1,33 @@
 import yt_dlp
-import os
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+songs = {}
 
 async def search_song(update, query):
 
-    await update.message.reply_text("🎵 Qo'shiq qidirilmoqda...")
-
     ydl_opts = {
-        'format': 'bestaudio',
-        'outtmpl': 'song.%(ext)s'
+        "quiet": True
     }
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.extract_info(f"ytsearch:{query}", download=True)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"ytsearch10:{query}", download=False)
 
-        for file in os.listdir():
-            if file.startswith("song"):
-                await update.message.reply_audio(audio=open(file,'rb'))
-                os.remove(file)
+    results = info["entries"]
 
-    except:
-        await update.message.reply_text("❌ Qo'shiq topilmadi")
+    keyboard = []
+
+    for i, video in enumerate(results):
+
+        title = video["title"]
+        url = video["webpage_url"]
+
+        songs[str(i)] = url
+
+        keyboard.append(
+            [InlineKeyboardButton(f"{i+1}. {title[:40]}", callback_data=f"song_{i}")]
+        )
+
+    await update.message.reply_text(
+        "🎵 Topilgan qo'shiqlar:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
