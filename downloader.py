@@ -6,11 +6,12 @@ async def download_video(update, url):
     await update.message.reply_text("⏳ Yuklanmoqda...")
 
     ydl_opts = {
-        "format": "best[ext=mp4]/best",
+        "format": "bestvideo+bestaudio/best",
         "outtmpl": "video.%(ext)s",
+        "merge_output_format": "mp4",
         "quiet": True,
         "noplaylist": True,
-        "nocheckcertificate": True
+        "cookiefile": "cookies.txt"
     }
 
     try:
@@ -23,6 +24,5 @@ async def download_video(update, url):
                 await update.message.reply_video(video=open(file,"rb"))
                 os.remove(file)
 
-    except Exception as e:
-        print(e)
+    except:
         await update.message.reply_text("❌ Yuklab bo'lmadi")
