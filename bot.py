@@ -3,7 +3,7 @@ import yt_dlp
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("8747120025:AAHOcCCT5F9uwHYCEkLKF5UpxMc5-seD2Zk")
 ADMIN_ID = 123456789  # o'zingizni telegram ID yozing
 
 menu = ReplyKeyboardMarkup(
