@@ -5,9 +5,9 @@ songs = {}
 
 async def search_song(update, query):
 
-    ydl_opts = {
-        "quiet": True
-    }
+    msg = await update.message.reply_text("🔎 Qo'shiq qidirilmoqda...")
+
+    ydl_opts = {"quiet": True}
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(f"ytsearch10:{query}", download=False)
@@ -24,10 +24,10 @@ async def search_song(update, query):
         songs[str(i)] = url
 
         keyboard.append(
-            [InlineKeyboardButton(f"{i+1}. {title[:40]}", callback_data=f"song_{i}")]
+            [InlineKeyboardButton(f"🎵 {title[:40]}", callback_data=f"song_{i}")]
         )
 
-    await update.message.reply_text(
-        "🎵 Topilgan qo'shiqlar:",
+    await msg.edit_text(
+        "🎧 Topilgan qo'shiqlar:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
