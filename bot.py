@@ -147,7 +147,6 @@ async def song_download(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.answer()
 
-
 # MESSAGE
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -163,7 +162,30 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🏠 Asosiy menyu", reply_markup=menu)
 
     elif "http" in text:
+
+        # VIDEO
+        await update.message.reply_text("📥 Video yuklanmoqda...")
         await download_video(update, text)
+
+        # AUDIO
+        await update.message.reply_text("🎵 Audio yuklanmoqda...")
+
+        ydl_opts = {
+            "format": "bestaudio",
+            "outtmpl": "audio.%(ext)s"
+        }
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([text])
+
+            for file in os.listdir():
+                if file.startswith("audio"):
+                    await update.message.reply_audio(audio=open(file, "rb"))
+                    os.remove(file)
+
+        except:
+            await update.message.reply_text("❌ Audio yuklab bo'lmadi")
 
     else:
         await search_song(update, text)
