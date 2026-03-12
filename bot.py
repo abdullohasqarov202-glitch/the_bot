@@ -1,10 +1,11 @@
 import os
+import yt_dlp
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
 import config
 from downloader import download_video
-from song import search_song
+from song import search_song, songs
 
 
 menu = ReplyKeyboardMarkup(
@@ -116,6 +117,37 @@ async def reklama(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ {sent} ta odamga yuborildi")
 
 
+# 🎵 QO‘SHIQ TANLAB YUKLASH
+async def song_download(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    index = query.data.split("_")[1]
+
+    url = songs.get(index)
+
+    await query.message.reply_text("⏳ Qo'shiq yuklanmoqda...")
+
+    ydl_opts = {
+        "format": "bestaudio",
+        "outtmpl": "song.%(ext)s"
+    }
+
+    try:
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        for file in os.listdir():
+            if file.startswith("song"):
+                await query.message.reply_audio(audio=open(file,"rb"))
+                os.remove(file)
+
+    except:
+        await query.message.reply_text("❌ Yuklab bo'lmadi")
+
+    await query.answer()
+
+
 # MESSAGE
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -143,6 +175,10 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("users", users))
 app.add_handler(CommandHandler("reklama", reklama))
 app.add_handler(CallbackQueryHandler(check_sub, pattern="check"))
+
+# 🎵 song tanlash
+app.add_handler(CallbackQueryHandler(song_download, pattern="song_"))
+
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
 
 print("🚀 BOT ISHLADI")
