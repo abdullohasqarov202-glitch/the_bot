@@ -1,22 +1,50 @@
 import os
-import yt_dlp
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-TOKEN = "8747120025:AAHOcCCT5F9uwHYCEkLKF5UpxMc5-seD2Zk"
-ADMIN_ID = 123456789
+import config
+from downloader import download_video
+from song import search_song
+
 
 menu = ReplyKeyboardMarkup(
-    [
-        ["📥 Video yuklash"],
-        ["🎵 Qo'shiq qidirish"]
-    ],
-    resize_keyboard=True
+[
+["📥 Video yuklash"],
+["🎵 Qo'shiq qidirish"]
+],
+resize_keyboard=True
 )
 
+back_menu = ReplyKeyboardMarkup(
+[["🔙 Ortga"]],
+resize_keyboard=True
+)
+
+
+# START
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.message.from_user.id
+
+    try:
+        member = await context.bot.get_chat_member(config.CHANNEL, user_id)
+
+        if member.status not in ["member","administrator","creator"]:
+            raise Exception()
+
+    except:
+
+        keyboard = [
+        [InlineKeyboardButton("📢 Kanalga obuna", url="https://t.me/Asqarov_0207")],
+        [InlineKeyboardButton("✅ Tekshirish", callback_data="check")]
+        ]
+
+        await update.message.reply_text(
+        "❗ Botdan foydalanish uchun kanalga obuna bo‘ling",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+        return
 
     if not os.path.exists("users.txt"):
         open("users.txt","w").close()
@@ -25,17 +53,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         users = f.read().splitlines()
 
         if str(user_id) not in users:
-            f.write(str(user_id) + "\n")
+            f.write(str(user_id)+"\n")
 
     await update.message.reply_text(
-        "🤖 Downloader botga xush kelibsiz!\n\nKerakli bo'limni tanlang.",
-        reply_markup=menu
+    "🤖 Downloader botga xush kelibsiz",
+    reply_markup=menu
     )
 
 
+# CHECK SUB
+async def check_sub(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    user_id = query.from_user.id
+
+    member = await context.bot.get_chat_member(config.CHANNEL, user_id)
+
+    if member.status in ["member","administrator","creator"]:
+
+        await query.answer()
+
+        await query.message.reply_text(
+        "✅ Rahmat obuna bo'lganingiz uchun ❤️",
+        reply_markup=menu
+        )
+
+    else:
+        await query.answer("❗ Avval kanalga obuna bo'ling", show_alert=True)
+
+
+# USERS
 async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    if update.message.from_user.id == ADMIN_ID:
+    if update.message.from_user.username == config.ADMIN_USERNAME:
 
         with open("users.txt") as f:
             count = len(f.readlines())
@@ -43,61 +93,42 @@ async def users(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"👥 Foydalanuvchilar: {count}")
 
 
-async def download_video(update, url):
+# REKLAMA
+async def reklama(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    await update.message.reply_text("⏳ Video yuklanmoqda...")
+    if update.message.from_user.username != config.ADMIN_USERNAME:
+        return
 
-    ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'video.%(ext)s',
-        'noplaylist': True
-    }
+    text = " ".join(context.args)
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+    with open("users.txt") as f:
+        users = f.readlines()
 
-        for file in os.listdir():
-            if file.startswith("video"):
-                await update.message.reply_video(video=open(file,'rb'))
-                os.remove(file)
+    sent = 0
 
-    except:
-        await update.message.reply_text("❌ Video yuklab bo'lmadi")
+    for user in users:
+        try:
+            await context.bot.send_message(chat_id=int(user.strip()), text=text)
+            sent += 1
+        except:
+            pass
 
-
-async def search_song(update, query):
-
-    await update.message.reply_text("🎵 Qo'shiq qidirilmoqda...")
-
-    ydl_opts = {
-        'format': 'bestaudio',
-        'outtmpl': 'song.%(ext)s',
-        'noplaylist': True
-    }
-
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch:{query}", download=True)['entries'][0]
-
-        for file in os.listdir():
-            if file.startswith("song"):
-                await update.message.reply_audio(audio=open(file,'rb'))
-                os.remove(file)
-
-    except:
-        await update.message.reply_text("❌ Qo'shiq topilmadi")
+    await update.message.reply_text(f"✅ {sent} ta odamga yuborildi")
 
 
+# MESSAGE
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
 
     if text == "📥 Video yuklash":
-        await update.message.reply_text("📎 Video link yuboring")
+        await update.message.reply_text("📎 Video link yuboring", reply_markup=back_menu)
 
     elif text == "🎵 Qo'shiq qidirish":
-        await update.message.reply_text("🔎 Qo'shiq nomini yozing")
+        await update.message.reply_text("🔎 Qo'shiq nomini yozing", reply_markup=back_menu)
+
+    elif text == "🔙 Ortga":
+        await update.message.reply_text("🏠 Asosiy menyu", reply_markup=menu)
 
     elif "http" in text:
         await download_video(update, text)
@@ -106,10 +137,12 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await search_song(update, text)
 
 
-app = ApplicationBuilder().token(TOKEN).build()
+app = ApplicationBuilder().token(config.TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("users", users))
+app.add_handler(CommandHandler("reklama", reklama))
+app.add_handler(CallbackQueryHandler(check_sub, pattern="check"))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message))
 
 print("🚀 BOT ISHLADI")
