@@ -3,12 +3,18 @@ import os
 
 async def download_video(update, url):
 
-    await update.message.reply_text("⏳ Yuklanmoqda...")
+    await update.message.reply_text("⏳ Video yuklanmoqda...")
 
     ydl_opts = {
-        "format": "best",
+        "format": "best[ext=mp4]/best",
         "outtmpl": "video.%(ext)s",
-        "noplaylist": True
+        "quiet": True,
+        "noplaylist": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android"]
+            }
+        }
     }
 
     try:
@@ -21,5 +27,5 @@ async def download_video(update, url):
                 os.remove(file)
 
     except Exception as e:
-        await update.message.reply_text("❌ Video yuklab bo'lmadi")
         print(e)
+        await update.message.reply_text("❌ Yuklab bo'lmadi")
